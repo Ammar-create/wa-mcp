@@ -7,7 +7,14 @@ description = "Headless WhatsApp CLI + local HTTP API on top of whatsapp-rust"
 license = "MIT"
 
 [dependencies]
-whatsapp-rust = "0.7"
+whatsapp-rust = { version = "0.7", default-features = false, features = [
+    "sqlite-storage",
+    "tokio-transport",
+    "tokio-runtime",
+    "tokio-native",
+    "ureq-client",
+    "signal",
+] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
 anyhow = "1"
 log = "0.4"
