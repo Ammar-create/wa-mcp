@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cross toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: aarch64
+
+      - name: build
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+          AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
+          PKG_CONFIG_ALLOW_CROSS: "1"
+        run: cargo build --release --target aarch64-unknown-linux-gnu 2>&1 | tail -60
+
+      - name: strip and report
+        run: |
+          aarch64-linux-gnu-strip target/aarch64-unknown-linux-gnu/release/wa-cli || true
+          ls -l target/aarch64-unknown-linux-gnu/release/wa-cli
+          echo "SIZE_BYTES=$(stat -c%s target/aarch64-unknown-linux-gnu/release/wa-cli)" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wa-cli-aarch64
+          path: target/aarch64-unknown-linux-gnu/release/wa-cli
+          if-no-files-found: error

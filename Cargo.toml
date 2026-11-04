@@ -1,0 +1,17 @@
+[package]
+name = "wa-cli"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Headless WhatsApp CLI + local HTTP API on top of whatsapp-rust"
+license = "MIT"
+
+[dependencies]
+whatsapp-rust = { version = "0.7", features = ["tokio-native", "sqlite-storage-bundled"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny_http = "0.12"
