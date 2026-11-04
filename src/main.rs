@@ -76,7 +76,7 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
     let st = state.clone();
     let archive = format!("{DATA_DIR}/messages.jsonl");
 
-    let store = SqliteStore::open(format!("{DATA_DIR}/wa.db")).await.context("open session store")?;
+    let store = SqliteStore::new(&format!("{DATA_DIR}/wa.db")).await.context("open session store")?;
 
     let mut builder = Bot::builder()
         .with_backend(store)
@@ -109,7 +109,7 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
                 let chat = ctx.info.source.chat.to_string();
                 let sender = ctx.info.source.sender.to_string();
                 let id = format!("{}", ctx.info.id);
-                let m = Msg { ts: now(), chat, sender, text, id };
+                let m = Msg { ts: now(), chat, sender, text: text.to_string(), id };
                 if let Ok(mut s) = st.lock() { s.messages.push(m.clone()); }
                 if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(&path) {
                     if let Ok(line) = serde_json::to_string(&m) { let _ = writeln!(f, "{line}"); }
