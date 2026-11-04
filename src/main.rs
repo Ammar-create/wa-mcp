@@ -78,6 +78,9 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
 
     let store = SqliteStore::new(&format!("{DATA_DIR}/wa.db")).await.context("open session store")?;
 
+    let st_conn = state.clone();
+    let st_msg = state.clone();
+
     let mut builder = Bot::builder()
         .with_backend(store)
         .on_qr_code(|qr, _timeout| async move {
@@ -92,7 +95,7 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
             }
         })
         .on_connected(move |_client| {
-            let st = state.clone();
+            let st = st_conn.clone();
             async move {
                 if let Ok(mut s) = st.lock() { s.connected = true; s.code = None; }
                 eprintln!("connected");
@@ -102,7 +105,7 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
             eprintln!("logged out: {info:?}");
         })
         .on_message(move |ctx| {
-            let st = state.clone();
+            let st = st_msg.clone();
             let path = archive.clone();
             async move {
                 let Some(text) = ctx.message.text_content() else { return };
@@ -147,7 +150,7 @@ async fn run(cmd: String, phone: Option<String>, code: Option<String>, port: u16
             Err(e) => { eprintln!("http bind failed: {e}"); return; }
         };
         eprintln!("http listening on {addr}");
-        for request in server.incoming_requests() {
+        for mut request in server.incoming_requests() {
             let url = request.url().to_string();
             let method = request.method().clone();
             let mut body = String::new();
